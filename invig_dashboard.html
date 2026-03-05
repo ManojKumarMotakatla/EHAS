@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Exam Alloc — Invigilator View</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#080910;--surface:#0d0f1a;--card:#111420;--card2:#151828;
+  --border:#1a1e2e;--border2:#222640;
+  --red:#e8341c;--red-glow:rgba(232,52,28,0.3);--red-soft:rgba(232,52,28,0.1);
+  --teal:#0fb981;--teal-soft:rgba(15,185,129,0.1);
+  --blue:#2563eb;--blue-soft:rgba(37,99,235,0.1);
+  --warn:#f59e0b;--warn-soft:rgba(245,158,11,0.1);
+  --text:#eef0ff;--muted:#555a78;--muted2:#7a82a8;
+  --mono:'Space Mono',monospace;--bebas:'Bebas Neue',cursive;--sans:'DM Sans',sans-serif;
+  --sidebar:220px;--radius:10px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;overflow:hidden;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar);min-width:var(--sidebar);
+  background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;z-index:10;
+}
+.sidebar-logo{
+  padding:20px 18px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.logo-icon{width:32px;height:32px;border-radius:8px;background:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 12px var(--red-glow);}
+.logo-icon svg{width:16px;height:16px;color:#fff;}
+.logo-text .t1{font-family:var(--bebas);font-size:16px;letter-spacing:2px;color:var(--text);line-height:1;}
+.logo-text .t2{font-family:var(--mono);font-size:8px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase;margin-top:2px;}
+
+.nav{flex:1;padding:12px 0;}
+.nav-section{padding:14px 18px 6px;font-family:var(--mono);font-size:9px;letter-spacing:0.18em;color:var(--muted);text-transform:uppercase;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;
+  color:var(--muted2);font-size:13px;font-weight:500;
+  border-left:2px solid transparent;transition:all 0.18s;user-select:none;
+}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,0.025);}
+.nav-item.active{color:var(--red);border-left-color:var(--red);background:var(--red-soft);}
+.nav-item .ni{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+
+/* Read-only notice */
+.readonly-notice{
+  margin:12px 14px;padding:10px 12px;
+  background:var(--teal-soft);border:1px solid rgba(15,185,129,0.2);
+  border-radius:8px;
+}
+.readonly-notice p{font-family:var(--mono);font-size:9px;letter-spacing:0.08em;color:var(--teal);text-transform:uppercase;line-height:1.5;}
+
+.sidebar-footer{padding:14px 18px;border-top:1px solid var(--border);}
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--border2);border-radius:8px;cursor:pointer;}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--blue));display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.user-info .un{font-size:12px;font-weight:600;color:var(--text);}
+.user-info .ur{font-family:var(--mono);font-size:9px;color:var(--teal);text-transform:uppercase;letter-spacing:0.08em;}
+.logout-btn{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--muted);transition:color 0.2s;padding:2px;}
+.logout-btn:hover{color:var(--red);}
+.logout-btn svg{width:14px;height:14px;display:block;}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{height:54px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;flex-shrink:0;}
+.topbar-title{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.topbar-title span{color:var(--text);}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.status-pill{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--teal);background:var(--teal-soft);border:1px solid rgba(15,185,129,0.2);padding:4px 12px;border-radius:100px;}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:blink 1.4s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.role-pill{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--muted2);background:var(--card);border:1px solid var(--border2);padding:4px 12px;border-radius:100px;}
+
+.content{flex:1;overflow-y:auto;padding:24px;}
+.page-section{display:none;}
+.page-section.active{display:block;animation:fadeIn 0.25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ── COMMON UI ── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap;}
+.page-header-left .ph-tag{font-family:var(--mono);font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.page-header-left h2{font-family:var(--bebas);font-size:32px;letter-spacing:1px;color:var(--text);line-height:1;}
+.page-header-right{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;border:none;cursor:pointer;font-size:13px;font-family:var(--sans);font-weight:600;transition:all 0.18s;}
+.btn svg{width:14px;height:14px;flex-shrink:0;}
+.btn-red{background:var(--red);color:#fff;box-shadow:0 0 16px var(--red-glow);}
+.btn-red:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn-ghost{background:var(--card);color:var(--text);border:1px solid var(--border2);}
+.btn-ghost:hover{border-color:var(--muted2);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px;}
+.stat-card{background:var(--card);border:1px solid var(--border2);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.stat-card.red::before{background:var(--red);}
+.stat-card.teal::before{background:var(--teal);}
+.stat-card.blue::before{background:var(--blue);}
+.stat-card.warn::before{background:var(--warn);}
+.stat-label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.stat-value{font-family:var(--bebas);font-size:36px;letter-spacing:1px;color:var(--text);line-height:1;}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+
+.card{background:var(--card);border:1px solid var(--border2);border-radius:var(--radius);margin-bottom:18px;}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
+.card-title{font-family:var(--mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted2);display:flex;align-items:center;gap:8px;}
+.card-title::before{content:'';display:inline-block;width:3px;height:13px;background:var(--teal);border-radius:2px;}
+.card-body{padding:20px;}
+
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.015);}
+.td-mono{font-family:var(--mono);font-size:11px;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.04em;}
+.badge-teal{background:var(--teal-soft);color:var(--teal);border:1px solid rgba(15,185,129,0.2);}
+.badge-red{background:var(--red-soft);color:var(--red);border:1px solid rgba(232,52,28,0.2);}
+.badge-warn{background:var(--warn-soft);color:var(--warn);border:1px solid rgba(245,158,11,0.2);}
+.badge-blue{background:var(--blue-soft);color:var(--blue);border:1px solid rgba(37,99,235,0.2);}
+.badge-muted{background:rgba(255,255,255,0.05);color:var(--muted2);border:1px solid var(--border2);}
+
+.empty-state{text-align:center;padding:48px 24px;color:var(--muted);}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:0.5;}
+.empty-text{font-size:13px;line-height:1.6;}
+
+.hall-selector{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+.hall-btn{padding:7px 16px;border-radius:7px;border:1px solid var(--border2);background:var(--card);color:var(--muted2);cursor:pointer;font-family:var(--mono);font-size:11px;transition:all 0.18s;}
+.hall-btn:hover{color:var(--text);border-color:var(--muted2);}
+.hall-btn.active{background:var(--teal-soft);border-color:var(--teal);color:var(--teal);}
+
+.seat-grid-wrap{overflow-x:auto;}
+.seat-grid-container{display:flex;flex-direction:column;gap:5px;min-width:fit-content;}
+.seat-row{display:flex;gap:5px;align-items:center;}
+.seat-row-lbl{font-family:var(--mono);font-size:10px;color:var(--muted);width:28px;text-align:right;flex-shrink:0;}
+.seat-cell{border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:rgba(255,255,255,0.9);transition:transform 0.15s;cursor:default;}
+.seat-cell:hover{transform:scale(1.15);z-index:2;}
+.seat-cell.empty{background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.1);}
+.s-sub{font-size:7px;opacity:0.75;margin-top:1px;}
+.seat-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);}
+.legend-item{display:flex;align-items:center;gap:6px;}
+.legend-dot{width:10px;height:10px;border-radius:3px;}
+.legend-lbl{font-family:var(--mono);font-size:10px;color:var(--muted2);}
+
+#toast{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px;}
+.toast-item{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;font-size:13px;min-width:280px;animation:slideIn 0.3s ease;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+.toast-item.success{border-left:3px solid var(--teal);}
+.toast-item.error{border-left:3px solid var(--red);}
+.toast-icon{font-size:16px;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<div class="app">
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <div class="t1">Exam Alloc</div>
+      <div class="t2">Hall Allocation</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-section">View Only</div>
+    <div class="nav-item active" onclick="showSection('results')">
+      <span class="ni">🗺</span> Results
+    </div>
+    <div class="nav-item" onclick="showSection('violations')">
+      <span class="ni">⚠️</span> Violations
+    </div>
+  </nav>
+
+  <div class="readonly-notice">
+    <p>👁 READ-ONLY ACCESS<br>Invigilator can view seating results and violation logs only.</p>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="user-avatar" id="userAvatar">IV</div>
+      <div class="user-info">
+        <div class="un" id="userName">Invigilator</div>
+        <div class="ur">Invigilator</div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="9" y2="12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">Exam Alloc / <span id="topbarTitle">Results</span></span>
+    <div class="topbar-right">
+      <div class="role-pill">👁 Invigilator</div>
+      <div class="status-pill"><span class="status-dot"></span>Read Only</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ════════════════════════════════════════
+         SECTION: RESULTS
+    ════════════════════════════════════════ -->
+    <div class="page-section active" id="sec-results">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="ph-tag">Seating Chart</div>
+          <h2>Results</h2>
+        </div>
+        <div class="page-header-right">
+          <button class="btn btn-ghost btn-sm" onclick="loadResults()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.08-8.4"/></svg> Refresh
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="window.open('http://localhost:3000/api/export/csv')">⬇ CSV</button>
+          <button class="btn btn-red btn-sm" onclick="window.open('http://localhost:3000/api/export/pdf')">⬇ PDF</button>
+        </div>
+      </div>
+
+      <!-- Summary stats -->
+      <div class="stat-grid">
+        <div class="stat-card teal"><div class="stat-label">Total Allocated</div><div class="stat-value" id="rs-allocated">—</div><div class="stat-sub">Students seated</div></div>
+        <div class="stat-card red"><div class="stat-label">Unallocated</div><div class="stat-value" id="rs-unallocated">—</div><div class="stat-sub">Overflow</div></div>
+        <div class="stat-card blue"><div class="stat-label">Total Halls</div><div class="stat-value" id="rs-halls">—</div><div class="stat-sub">In use</div></div>
+        <div class="stat-card warn"><div class="stat-label">Subjects</div><div class="stat-value" id="rs-subjects">—</div><div class="stat-sub">Distinct subjects</div></div>
+      </div>
+
+      <!-- Hall grid -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Hall-wise Seating Grid</div>
+          <span id="hallGridInfo" style="font-family:var(--mono);font-size:10px;color:var(--muted)"></span>
+        </div>
+        <div class="card-body">
+          <div class="hall-selector" id="hallSelectorBtns"></div>
+          <div id="seatGridWrap">
+            <div class="empty-state"><div class="empty-icon">🗺</div><div class="empty-text">Select a hall above to view the seating grid.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subject distribution per hall -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Subject Distribution per Hall</div></div>
+        <div class="card-body" style="padding:0">
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Hall ID</th><th>Subject</th><th>Students</th></tr></thead>
+            <tbody id="subDistBody">
+              <tr><td colspan="3"><div class="empty-state" style="padding:20px"><div class="empty-text">No data yet.</div></div></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- Unallocated students -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Unallocated Students</div>
+          <span class="badge badge-red" id="unallocCount">0</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Student ID</th><th>Name</th><th>Subject</th><th>Reason</th></tr></thead>
+            <tbody id="unallocBody">
+              <tr><td colspan="4"><div class="empty-state" style="padding:20px"><div class="empty-text">No unallocated students ✅</div></div></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- Full student-seat list -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Student Seat List</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input id="resSearch" placeholder="Search student / hall…"
+              style="background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:6px 12px;color:var(--text);font-size:12px;outline:none;width:200px;"
+              oninput="filterResults()"/>
+            <span class="badge badge-muted" id="resCount">0</span>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Student ID</th><th>Name</th><th>Subject</th><th>Hall</th><th>Seat</th><th>Row</th><th>Col</th></tr></thead>
+            <tbody id="resultsBody">
+              <tr><td colspan="7"><div class="empty-state" style="padding:20px"><div class="empty-text">No allocations yet. Ask admin to run allocation.</div></div></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════
+         SECTION: VIOLATIONS
+    ════════════════════════════════════════ -->
+    <div class="page-section" id="sec-violations">
+      <div class="page-header">
+        <div class="page-header-left">
+          <div class="ph-tag">Audit Log</div>
+          <h2>Violations</h2>
+        </div>
+        <div class="page-header-right">
+          <button class="btn btn-ghost btn-sm" onclick="loadViolations()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.08-8.4"/></svg> Refresh
+          </button>
+        </div>
+      </div>
+
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card warn"><div class="stat-label">Total Violations</div><div class="stat-value" id="viol-total">—</div><div class="stat-sub">Adjacency conflicts</div></div>
+        <div class="stat-card red"><div class="stat-label">Unallocated</div><div class="stat-value" id="viol-unalloc">—</div><div class="stat-sub">Capacity overflow</div></div>
+        <div class="stat-card blue"><div class="stat-label">Last Run</div><div class="stat-value" id="viol-lastrun" style="font-size:18px">—</div><div class="stat-sub">Allocation date</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Allocation Run History</div></div>
+        <div class="card-body" style="padding:0">
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Run At</th><th>Total</th><th>Allocated</th><th>Unallocated</th><th>Violations</th><th>Duration</th><th>Status</th></tr></thead>
+            <tbody id="violLogsBody">
+              <tr><td colspan="7"><div class="empty-state" style="padding:24px"><div class="empty-icon">⚠️</div><div class="empty-text">No runs found.</div></div></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Unallocated Students Detail</div></div>
+        <div class="card-body" style="padding:0">
+          <div class="tbl-wrap"><table>
+            <thead><tr><th>Student ID</th><th>Name</th><th>Subject</th><th>Reason</th><th>Logged At</th></tr></thead>
+            <tbody id="violUnallocBody">
+              <tr><td colspan="5"><div class="empty-state" style="padding:24px"><div class="empty-text">No unallocated students.</div></div></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+const API = 'http://localhost:3000/api';
+
+// ── AUTH CHECK ──
+const role = sessionStorage.getItem('ehas_role');
+const user = sessionStorage.getItem('ehas_user');
+if (!role || !user || role !== 'invigilator') { window.location.href = 'login.html'; }
+
+document.getElementById('userName').textContent  = user || 'Invigilator';
+document.getElementById('userAvatar').textContent = (user||'IV').substring(0,2).toUpperCase();
+
+function logout() { sessionStorage.clear(); window.location.href = 'login.html'; }
+
+// ── NAVIGATION ──
+function showSection(name) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') === `showSection('${name}')`) n.classList.add('active');
+  });
+  document.getElementById('topbarTitle').textContent = name.charAt(0).toUpperCase() + name.slice(1);
+  if (name === 'results')    loadResults();
+  if (name === 'violations') loadViolations();
+}
+
+// ── TOAST ──
+function toast(msg, type='success') {
+  const icons = { success:'✅', error:'❌', warn:'⚠️' };
+  const el = document.createElement('div');
+  el.className = `toast-item ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+async function api(path) {
+  const res = await fetch(API + path);
+  return res.json();
+}
+
+// ── COLORS ──
+const SEAT_COLORS = ['#2563eb','#0fb981','#f59e0b','#e8341c','#a78bfa','#ec4899','#06b6d4','#84cc16'];
+const subjectColorMap = {};
+let colorIdx = 0;
+function getSubjectColor(sub) {
+  if (!subjectColorMap[sub]) subjectColorMap[sub] = SEAT_COLORS[colorIdx++ % SEAT_COLORS.length];
+  return subjectColorMap[sub];
+}
+
+// ══════════════════════════════════════
+// RESULTS
+// ══════════════════════════════════════
+let allAllocations = [];
+async function loadResults() {
+  try {
+    const [allocData, hallData, unallocData, subData] = await Promise.all([
+      api('/allocations'), api('/halls'), api('/allocations/unallocated'),
+      api('/allocations/subject-distribution')
+    ]);
+    allAllocations = allocData.data || [];
+    const halls = hallData.data || [];
+    const unalloc = unallocData.data || [];
+    const subjects = [...new Set(allAllocations.map(a => a.subject_code))];
+
+    // Stats
+    document.getElementById('rs-allocated').textContent   = allAllocations.length;
+    document.getElementById('rs-unallocated').textContent = unalloc.length;
+    document.getElementById('rs-halls').textContent       = halls.length;
+    document.getElementById('rs-subjects').textContent    = subjects.length;
+
+    // Hall selector
+    const btnDiv = document.getElementById('hallSelectorBtns');
+    btnDiv.innerHTML = halls.map((h,i) =>
+      `<div class="hall-btn ${i===0?'active':''}" onclick="selectHallGrid('${h.hall_id}',this)">${h.hall_id} <span style="color:var(--muted);font-size:9px">(cap:${h.capacity})</span></div>`
+    ).join('');
+    if (halls.length) selectHallGrid(halls[0].hall_id, btnDiv.querySelector('.hall-btn'));
+
+    // Subject distribution table
+    const sdb = document.getElementById('subDistBody');
+    const subDist = subData.data || [];
+    sdb.innerHTML = subDist.length ? subDist.map(s => `
+      <tr>
+        <td class="td-mono">${s.hall_id}</td>
+        <td><span class="badge badge-blue">${s.subject_code}</span></td>
+        <td><span style="font-family:var(--mono);color:var(--teal)">${s.student_count}</span></td>
+      </tr>`).join('') :
+      `<tr><td colspan="3"><div class="empty-state" style="padding:20px"><div class="empty-text">No allocation data yet.</div></div></td></tr>`;
+
+    // Unallocated
+    document.getElementById('unallocCount').textContent = unalloc.length;
+    const ub = document.getElementById('unallocBody');
+    ub.innerHTML = unalloc.length ? unalloc.map(u => `
+      <tr>
+        <td class="td-mono">${u.student_id}</td>
+        <td>${u.student_name}</td>
+        <td><span class="badge badge-blue">${u.subject_code}</span></td>
+        <td style="color:var(--warn)">${u.reason}</td>
+      </tr>`).join('') :
+      `<tr><td colspan="4"><div class="empty-state" style="padding:20px"><div class="empty-text">No unallocated students ✅</div></div></td></tr>`;
+
+    // Student list
+    renderResults(allAllocations);
+  } catch(e) { toast('Failed to load results. Is the server running?', 'error'); }
+}
+
+async function selectHallGrid(hallId, btn) {
+  document.querySelectorAll('.hall-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  try {
+    const data = await api('/allocations/hall/' + hallId);
+    if (!data.success) { document.getElementById('seatGridWrap').innerHTML = '<div class="empty-state"><div class="empty-text">No data for this hall.</div></div>'; return; }
+    const { hall, grid } = data;
+    document.getElementById('hallGridInfo').textContent = `${hall.total_rows} rows × ${hall.total_cols} cols · Cap: ${hall.capacity}`;
+    const cellW = Math.max(40, Math.min(72, Math.floor(600/hall.total_cols)));
+    const cellH = 48;
+    let html = `<div class="seat-grid-wrap"><div class="seat-grid-container">`;
+    html += `<div style="display:flex;gap:5px;padding-left:33px;margin-bottom:4px;">`;
+    for (let c=0;c<hall.total_cols;c++) html += `<div style="width:${cellW}px;font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center">C${c+1}</div>`;
+    html += `</div>`;
+    grid.forEach((row,r) => {
+      html += `<div class="seat-row"><div class="seat-row-lbl">R${r+1}</div>`;
+      row.forEach(seat => {
+        if (seat.occupied) {
+          const bg = getSubjectColor(seat.subject_code);
+          html += `<div class="seat-cell" style="width:${cellW}px;height:${cellH}px;background:${bg}20;border:1px solid ${bg}60;" title="${seat.student_id} — ${seat.student_name}">
+            <span style="color:${bg};font-weight:700;font-size:${cellW<50?7:9}px">${seat.subject_code}</span>
+            <span class="s-sub" style="color:rgba(255,255,255,0.6);font-size:7px">${seat.student_id.slice(-4)}</span>
+          </div>`;
+        } else {
+          html += `<div class="seat-cell empty" style="width:${cellW}px;height:${cellH}px"></div>`;
+        }
+      });
+      html += `</div>`;
+    });
+    const seatsInHall = grid.flat().filter(s=>s.occupied).map(s=>s.subject_code);
+    const uniqSubs = [...new Set(seatsInHall)];
+    html += `<div class="seat-legend">`;
+    uniqSubs.forEach(sub => {
+      const clr = getSubjectColor(sub);
+      html += `<div class="legend-item"><div class="legend-dot" style="background:${clr}"></div><span class="legend-lbl">${sub}</span></div>`;
+    });
+    html += `</div></div></div>`;
+    document.getElementById('seatGridWrap').innerHTML = html;
+  } catch(e) { toast('Error loading hall grid','error'); }
+}
+
+function renderResults(list) {
+  document.getElementById('resCount').textContent = list.length + ' seats';
+  const tbody = document.getElementById('resultsBody');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state" style="padding:20px"><div class="empty-text">No allocations yet.</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(a => `
+    <tr>
+      <td class="td-mono">${a.student_id}</td>
+      <td>${a.student_name}</td>
+      <td><span class="badge badge-blue">${a.subject_code}</span></td>
+      <td class="td-mono">${a.hall_id}</td>
+      <td class="td-mono" style="color:var(--teal)">${a.seat_label}</td>
+      <td class="td-mono">${a.seat_row}</td>
+      <td class="td-mono">${a.seat_col}</td>
+    </tr>`).join('');
+}
+
+function filterResults() {
+  const q = document.getElementById('resSearch').value.toLowerCase();
+  renderResults(allAllocations.filter(a =>
+    a.student_id.toLowerCase().includes(q) ||
+    a.student_name.toLowerCase().includes(q) ||
+    a.subject_code.toLowerCase().includes(q) ||
+    a.hall_id.toLowerCase().includes(q)
+  ));
+}
+
+// ══════════════════════════════════════
+// VIOLATIONS
+// ══════════════════════════════════════
+async function loadViolations() {
+  try {
+    const [logData, unallocData] = await Promise.all([api('/logs'), api('/allocations/unallocated')]);
+    const logs = logData.data || [];
+    const lastLog = logs[0];
+    document.getElementById('viol-total').textContent   = lastLog ? lastLog.constraint_violations : '—';
+    document.getElementById('viol-unalloc').textContent = lastLog ? lastLog.total_unallocated : '—';
+    document.getElementById('viol-lastrun').textContent = lastLog ? new Date(lastLog.run_at).toLocaleDateString() : '—';
+
+    const lb = document.getElementById('violLogsBody');
+    lb.innerHTML = logs.length ? logs.map(l => `
+      <tr>
+        <td class="td-mono">${new Date(l.run_at).toLocaleString()}</td>
+        <td>${l.total_students}</td>
+        <td style="color:var(--teal)">${l.total_allocated}</td>
+        <td style="color:${l.total_unallocated>0?'var(--red)':'var(--muted)'}">${l.total_unallocated}</td>
+        <td style="color:${l.constraint_violations>0?'var(--warn)':'var(--muted)'}">${l.constraint_violations}</td>
+        <td class="td-mono">${l.duration_ms}ms</td>
+        <td><span class="badge ${l.status==='SUCCESS'?'badge-teal':l.status==='PARTIAL'?'badge-warn':'badge-red'}">${l.status}</span></td>
+      </tr>`).join('') :
+      `<tr><td colspan="7"><div class="empty-state" style="padding:24px"><div class="empty-icon">⚠️</div><div class="empty-text">No runs yet.</div></div></td></tr>`;
+
+    const ub = document.getElementById('violUnallocBody');
+    const unalloc = unallocData.data || [];
+    ub.innerHTML = unalloc.length ? unalloc.map(u => `
+      <tr>
+        <td class="td-mono">${u.student_id}</td>
+        <td>${u.student_name}</td>
+        <td><span class="badge badge-blue">${u.subject_code}</span></td>
+        <td style="color:var(--warn)">${u.reason}</td>
+        <td class="td-mono" style="color:var(--muted)">${new Date(u.logged_at).toLocaleString()}</td>
+      </tr>`).join('') :
+      `<tr><td colspan="5"><div class="empty-state" style="padding:24px"><div class="empty-text">No unallocated students ✅</div></div></td></tr>`;
+  } catch(e) { toast('Failed to load violations','error'); }
+}
+
+// ── INIT ──
+loadResults();
+</script>
+</body>
+</html>
