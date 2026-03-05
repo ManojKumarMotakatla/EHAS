@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "fast-csv": "^5.0.5",
+    "mysql2": "^3.18.2",
+    "papaparse": "^5.5.3",
+    "pdfkit": "^0.17.2"
+  }
+}
